@@ -274,7 +274,7 @@
       </article>
 
       <article class="card">
-        <h2>Evolución de las 5 regiones con más matriculados</h2>
+        <h2>Evolución de las 10 regiones con más matriculados</h2>
 
         <div class="viz-wrap">
           <svg id="compareChart" viewBox="0 0 760 430" aria-label="Evolución de las principales regiones"></svg>
@@ -357,7 +357,7 @@ function normalizar(str) {
     if (s.includes("higgins")) return "ohiggins";
     if (s.includes("maule")) return "maule";
     if (s.includes("nuble")) return "nuble";
-    if (s.includes("biobio") || s.includes("bio bio")) return "biobio";
+    if (s.includes("biobio") || s.includes("bio bio") || s.includes("b")) return "biobio";
     if (s.includes("araucania")) return "araucania";
     if (s.includes("rios")) return "los rios";
     if (s.includes("lagos")) return "los lagos";
@@ -555,12 +555,13 @@ function normalizar(str) {
       }, "% del total nacional"));
     }
 
-    function drawCompareChart(svgId, series) {
+function drawCompareChart(svgId, series) {
       const svg = document.getElementById(svgId);
       svg.innerHTML = "";
 
       const W = 760, H = 430;
-      const m = { top: 26, right: 130, bottom: 52, left: 72 };
+      // Ampliamos el margen derecho para que quepan las leyendas
+      const m = { top: 26, right: 140, bottom: 52, left: 66 };
       const iw = W - m.left - m.right;
       const ih = H - m.top - m.bottom;
 
@@ -570,7 +571,8 @@ function normalizar(str) {
       const xMin = Math.min(...xs);
       const xMax = Math.max(...xs);
       const yMin = 0;
-      const yMax = Math.ceil(Math.max(...ys) / 10000) * 10000;
+      // Ajustamos el máximo del eje Y para tasas relativas (saltos más precisos)
+      const yMax = Math.ceil(Math.max(...ys) / 10) * 10;
 
       const xScale = x => m.left + ((x - xMin) / (xMax - xMin || 1)) * iw;
       const yScale = y => m.top + ih - ((y - yMin) / (yMax - yMin || 1)) * ih;
@@ -589,7 +591,7 @@ function normalizar(str) {
           "text-anchor": "end",
           "font-size": 12,
           fill: "#667085"
-        }, formatMiles(Math.round(value))));
+        }, value.toFixed(1))); // Mostramos 1 decimal en vez de formatMiles
       }
 
       xs.forEach(x => {
@@ -631,9 +633,9 @@ function normalizar(str) {
           }));
         });
 
-        // NUEVO: AGREGAR LEYENDA
-        const legendX = W - m.right + 15;
-        const legendY = m.top + (sIndex * 22);
+        // NUEVO: CAJAS DE LEYENDA A LA DERECHA
+        const legendX = W - m.right + 20;
+        const legendY = m.top + (sIndex * 24);
 
         svg.appendChild(svgEl("rect", {
           x: legendX, y: legendY, width: 12, height: 12, fill: s.color, rx: 2
@@ -642,7 +644,7 @@ function normalizar(str) {
         svg.appendChild(svgEl("text", {
           x: legendX + 18, y: legendY + 10,
           "font-size": 11, fill: "#1f2937", "font-weight": 600
-        }, s.name.charAt(0).toUpperCase() + s.name.slice(1))); // Capitalizar región
+        }, s.name.charAt(0).toUpperCase() + s.name.slice(1))); // Capitalizamos
       });
 
       svg.appendChild(svgEl("text", {
@@ -652,7 +654,7 @@ function normalizar(str) {
         "text-anchor": "middle",
         "font-size": 12,
         fill: "#667085"
-      }, "Matrícula total"));
+      }, "Matriculados x 1.000 hab."));
     }
 
     function drawMap(svgId, geo, valuesMap) {
@@ -789,38 +791,65 @@ function normalizar(str) {
         document.getElementById("lineNote").innerHTML =
           `La Región Metropolitana pasa de representar aproximadamente <b>${formatPct(inicio)}</b> del total nacional en el primer año a <b>${formatPct(fin)}</b> en el último.`;
 
-        const ultimoAno = anos[anos.length - 1];
+const ultimoAno = anos[anos.length - 1];
 
-        const top5Regions = Object.keys(porRegion)
-          .map(region => ({
-            region,
-            ultimo: porRegion[region][ultimoAno] || 0
-          }))
-          .sort((a, b) => b.ultimo - a.ultimo)
-          .slice(0, 5);
+        // Población estimada para el cálculo
+        const poblacion2025 = {
+          "arica y parinacota": 261000, "tarapaca": 410000, "antofagasta": 714000,
+          "atacama": 320000, "coquimbo": 870000, "valparaiso": 2020000,
+          "metropolitana": 8420000, "ohiggins": 1020000, "maule": 1170000,
+          "nuble": 520000, "biobio": 1690000, "araucania": 1030000,
+          "los rios": 411000, "los lagos": 907000, "aysen": 108000,
+          "magallanes": 182000
+        };
 
-        const palette = ["#9f2d2d", "#2f6ea5", "#2e8b57", "#9467bd", "#d97706"];
+        // Calculamos el top 5 pero de forma RELATIVA (tasa x 1000 habitantes)
+// Calculamos el top 10 de forma RELATIVA (tasa x 1000 habitantes)
+        const top10Regions = Object.keys(porRegion)
+          .map(region => {
+            const pob = poblacion2025[normalizar(region)] || 1; 
+            const matriculaAbsoluta = porRegion[region][ultimoAno] || 0;
+            return {
+              region,
+              ultimoAbsoluto: matriculaAbsoluta,
+              ultimoRelativo: (matriculaAbsoluta / pob) * 1000
+            };
+          })
+          .sort((a, b) => b.ultimoRelativo - a.ultimoRelativo) 
+          .slice(0, 10); // <-- Cambiamos a 10
 
-        const top5Series = top5Regions.map((d, i) => ({
+        // Paleta extendida a 10 colores diferenciables
+        const palette = [
+          "#9f2d2d", "#2f6ea5", "#2e8b57", "#9467bd", "#d97706",
+          "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"
+        ];
+
+        const top10Series = top10Regions.map((d, i) => ({
           name: d.region,
           color: palette[i],
-          width: normalizar(d.region).includes("metropolitana") ? 4 : 2.5,
-          point: normalizar(d.region).includes("metropolitana") ? 4.1 : 3.1,
-          data: anos.map(a => ({
-            x: a,
-            y: porRegion[d.region][a] || 0
-          }))
+          width: normalizar(d.region).includes("metropolitana") ? 3.5 : 2, // Líneas un poco más finas para no saturar
+          point: normalizar(d.region).includes("metropolitana") ? 3.5 : 2.5,
+          data: anos.map(a => {
+            const pob = poblacion2025[normalizar(d.region)] || 1;
+            return {
+              x: a,
+              y: ((porRegion[d.region][a] || 0) / pob) * 1000 
+            };
+          })
         }));
 
-        drawCompareChart("compareChart", top5Series);
+        drawCompareChart("compareChart", top10Series);
+
+        // Actualizamos el título de la lista automáticamente
+        document.querySelector(".ranking-title").textContent = "Las 10 regiones con mayor tasa de matriculados en 2025";
 
         const rankingList = document.getElementById("rankingList");
         rankingList.innerHTML = "";
-        top5Regions.forEach(d => {
+        top10Regions.forEach(d => {
           const li = document.createElement("li");
           li.innerHTML = `
             <span class="region-name">${d.region}</span>
-            <span class="region-value">${formatMiles(d.ultimo)}</span>
+            <span class="region-value">${d.ultimoRelativo.toFixed(1)} x 1.000 hab.</span>
           `;
           rankingList.appendChild(li);
         });
