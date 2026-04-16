@@ -1,130 +1,796 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>Análisis de Centralización</title>
-    <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
-        .dashboard { max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
-        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        h2 { color: #1a2a3a; margin-top: 0; margin-bottom: 5px; text-align: center; }
-        p.desc { text-align: center; color: #7f8c8d; font-size: 14px; margin-bottom: 20px; }
-        .chart { width: 100%; height: 400px; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Matrícula por región</title>
+  <style>
+    :root {
+      --bg: #eef3f7;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #667085;
+      --shadow: 0 10px 30px rgba(16, 24, 40, 0.08);
+      --radius: 20px;
+      --accent: #8b2c2c;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, "Segoe UI", Arial, sans-serif;
+      background: radial-gradient(circle at top left, #f8fbff 0%, #eef3f7 52%, #e8eef4 100%);
+      color: var(--text);
+    }
+
+    .wrap {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 28px 20px 40px;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      padding: 28px 30px;
+      margin-bottom: 22px;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: 36px;
+      line-height: 1.08;
+    }
+
+    .subtitle {
+      margin: 0;
+      max-width: 940px;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.55;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 22px;
+      margin-bottom: 22px;
+    }
+
+    .one-col {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 22px;
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 22px;
+    }
+
+    .card h2 {
+      margin: 0 0 6px;
+      font-size: 24px;
+      line-height: 1.15;
+    }
+
+    .desc {
+      margin: 0 0 16px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .viz-wrap {
+      border: 1px solid #edf1f5;
+      border-radius: 18px;
+      background: linear-gradient(180deg, #fbfdff 0%, #f7fafc 100%);
+      padding: 14px;
+      overflow: hidden;
+    }
+
+    svg {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .mini-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .stat {
+      background: #f8fafc;
+      border: 1px solid #edf1f5;
+      border-radius: 14px;
+      padding: 14px;
+    }
+
+    .stat-label {
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 6px;
+    }
+
+    .stat-value {
+      font-size: 28px;
+      font-weight: 800;
+      line-height: 1.05;
+    }
+
+    .annotation {
+      margin-top: 14px;
+      padding: 13px 14px;
+      border-left: 4px solid #d97706;
+      background: #fff8eb;
+      border-radius: 12px;
+      color: #6b4f17;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .legend-title {
+      margin: 14px 0 8px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .legend-scale {
+      height: 16px;
+      border-radius: 999px;
+      border: 1px solid #d9e1ea;
+      background: linear-gradient(
+        90deg,
+        #e8f5e9 0%,
+        #a5d6a7 20%,
+        #66bb6a 40%,
+        #fbc02d 60%,
+        #ef6c00 80%,
+        #c62828 100%
+      );
+    }
+
+    .legend-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 6px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .ranking-title {
+      margin: 18px 0 10px;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .list li {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 12px;
+      background: #fafbfc;
+      border: 1px solid #edf1f5;
+      border-radius: 12px;
+      font-size: 14px;
+    }
+
+    .region-name {
+      font-weight: 600;
+    }
+
+    .region-value {
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .footer {
+      margin-top: 16px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .error {
+      margin-top: 18px;
+      color: #b42318;
+      font-weight: 700;
+    }
+
+    @media (max-width: 980px) {
+      .two-col {
+        grid-template-columns: 1fr;
+      }
+
+      h1 {
+        font-size: 30px;
+      }
+    }
+  </style>
 </head>
 <body>
+  <div class="wrap">
+    <section class="hero">
+      <h1>Matrícula por región</h1>
+      <p class="subtitle">
+        Esta visualización combina una lectura temporal y territorial de la matrícula de educación superior en Chile. Los gráficos de líneas permiten observar cómo evoluciona la concentración en el tiempo, mientras que el mapa resume la distribución regional de matriculados en 2025.
+      </p>
+    </section>
 
-<div class="dashboard">
-    <div class="card">
-        <h2>Peso de la Centralización</h2>
-        <p class="desc">Comparación del total de la Región Metropolitana frente a la suma de las otras 15 regiones del país.</p>
-        <div id="chart-macro" class="chart"></div>
-    </div>
+    <section class="two-col">
+      <article class="card">
+        <h2>Evolución temporal de la concentración</h2>
+        <p class="desc">
+          Este gráfico muestra qué porcentaje del total nacional corresponde a la Región Metropolitana en cada año, para observar cómo cambia su peso relativo dentro del sistema.
+        </p>
 
-    <div class="card">
-        <h2>Evolución Regional Excluyendo la Región Metropolitana</h2>
-        <p class="desc">Al remover la región, la escala permite visualizar las variaciones del resto del país.</p>
-        <div id="chart-micro" class="chart"></div>
-    </div>
-</div>
+        <div class="viz-wrap">
+          <svg id="lineChart" viewBox="0 0 760 430" aria-label="Evolución temporal de la concentración"></svg>
+        </div>
 
-<script>
-async function iniciar() {
-    try {
-        const resCsv = await fetch('resumen_superior.csv');
-        if (!resCsv.ok) throw new Error("No se pudo cargar el archivo CSV.");
-        const texto = await resCsv.text();
-        
-        const filas = texto.replace(/^\ufeff/, "").trim().split('\n').slice(1);
-        const store = {};
-        const aniosUnicos = new Set();
-        
-        filas.forEach(l => {
-            const cols = l.split(',');
-            if (cols.length >= 3) {
-                const a = cols[0].trim();
-                const n = cols[1].trim();
-                const v = parseInt(cols[2].trim());
-                
-                if (a && n && !isNaN(v)) {
-                    aniosUnicos.add(a);
-                    if (!store[n]) store[n] = {};
-                    store[n][a] = v;
-                }
-            }
+        <div class="mini-stats">
+          <div class="stat">
+            <div class="stat-label">Primer año</div>
+            <div class="stat-value" id="statStart">—</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Último año</div>
+            <div class="stat-value" id="statEnd">—</div>
+          </div>
+        </div>
+
+        <div class="annotation" id="lineNote"></div>
+      </article>
+
+      <article class="card">
+        <h2>Evolución de las principales regiones</h2>
+        <p class="desc">
+          Aquí se comparan las 5 regiones con mayor matrícula en 2025 a lo largo de todo el período, para mostrar su evolución de manera continua.
+        </p>
+
+        <div class="viz-wrap">
+          <svg id="compareChart" viewBox="0 0 760 430" aria-label="Evolución de las principales regiones"></svg>
+        </div>
+
+        <div class="ranking-title">Top regiones en 2025</div>
+        <ul class="list" id="rankingList"></ul>
+      </article>
+    </section>
+
+    <section class="one-col">
+      <article class="card">
+        <h2>Concentración de matriculados 2025</h2>
+        <p class="desc">
+          Cada región está coloreada según su cantidad total de matriculados en 2025. Los tonos más cercanos al rojo indican una matrícula más alta.
+        </p>
+
+        <div class="viz-wrap">
+          <svg id="mapSvg" viewBox="0 0 900 900" aria-label="Mapa de concentración de matriculados 2025"></svg>
+        </div>
+
+        <div class="legend-title">Menor matrícula → mayor matrícula</div>
+        <div class="legend-scale"></div>
+        <div class="legend-labels">
+          <span id="legendMin">0</span>
+          <span id="legendMid">0</span>
+          <span id="legendMax">0</span>
+        </div>
+
+        <div class="footer">
+          Fuente: elaboración propia a partir de <b>resumen_superior.csv</b> y del mapa regional en <b>regiones.json</b>.
+        </div>
+
+        <div class="error" id="errorMsg"></div>
+      </article>
+    </section>
+  </div>
+
+  <script>
+    async function cargarJSON(url) {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("No se pudo cargar " + url);
+      return await res.json();
+    }
+
+    async function cargarCSV(url) {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("No se pudo cargar " + url);
+      const txt = await res.text();
+      return parseCSV(txt);
+    }
+
+    function parseCSV(text) {
+      const limpio = text.replace(/^\ufeff/, "").trim();
+      const lines = limpio.split(/\r?\n/);
+      const headers = lines[0].split(",").map(h => h.trim());
+
+      return lines.slice(1).map(line => {
+        const values = line.split(",");
+        const obj = {};
+        headers.forEach((h, i) => obj[h] = values[i] ? values[i].trim() : "");
+        return obj;
+      });
+    }
+
+    function normalizar(str) {
+      return String(str || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .replace(/^region de /, "")
+        .replace(/^region del /, "")
+        .replace(/^region de la /, "")
+        .replace(/^region metropolitana de santiago/, "metropolitana")
+        .replace(/^o'higgins$/, "ohiggins")
+        .replace(/'/g, "")
+        .replace(/ñ/g, "n")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    function nombreBonito(str) {
+      return String(str || "")
+        .replace(/^Región de /, "")
+        .replace(/^Región del /, "")
+        .replace(/^Región de la /, "");
+    }
+
+    function formatMiles(n) {
+      return Number(n).toLocaleString("es-CL");
+    }
+
+    function formatPct(n) {
+      return `${n.toFixed(1)}%`;
+    }
+
+    function svgEl(tag, attrs = {}, text = null) {
+      const el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+      Object.entries(attrs).forEach(([k, v]) => el.setAttribute(k, v));
+      if (text !== null) el.textContent = text;
+      return el;
+    }
+
+    function linePath(points) {
+      return points.map((p, i) => `${i === 0 ? "M" : "L"}${p.x},${p.y}`).join(" ");
+    }
+
+    function flattenCoords(geometry) {
+      const all = [];
+      function walk(coords) {
+        if (!Array.isArray(coords)) return;
+        if (typeof coords[0] === "number" && typeof coords[1] === "number") {
+          all.push(coords);
+        } else {
+          coords.forEach(walk);
+        }
+      }
+      walk(geometry.coordinates);
+      return all;
+    }
+
+    function projectPoint(lon, lat, bounds, width, height, pad) {
+      const x = ((lon - bounds.minLon) / (bounds.maxLon - bounds.minLon || 1)) * (width - pad * 2) + pad;
+      const y = height - (((lat - bounds.minLat) / (bounds.maxLat - bounds.minLat || 1)) * (height - pad * 2) + pad);
+      return [x, y];
+    }
+
+    function geometryToPath(geometry, bounds, width, height, pad) {
+      let path = "";
+
+      function ringToPath(ring) {
+        ring.forEach((pt, i) => {
+          const [x, y] = projectPoint(pt[0], pt[1], bounds, width, height, pad);
+          path += `${i === 0 ? "M" : "L"}${x.toFixed(2)},${y.toFixed(2)} `;
         });
+        path += "Z ";
+      }
 
-        const listaAnios = Array.from(aniosUnicos).sort();
-        const listaRegiones = Object.keys(store);
-        
-        if (listaAnios.length === 0) throw new Error("No hay datos para graficar.");
+      if (geometry.type === "Polygon") {
+        geometry.coordinates.forEach(ringToPath);
+      } else if (geometry.type === "MultiPolygon") {
+        geometry.coordinates.forEach(poly => poly.forEach(ringToPath));
+      }
 
-        const datosRM = listaAnios.map(a => {
-            const claveRM = listaRegiones.find(r => r.toUpperCase().includes("METROPOLITANA"));
-            return claveRM && store[claveRM][a] ? store[claveRM][a] : 0;
-        });
+      return path.trim();
+    }
 
-        const datosResto = listaAnios.map(a => {
-            let suma = 0;
-            listaRegiones.forEach(r => {
-                if (!r.toUpperCase().includes("METROPOLITANA") && store[r][a]) {
-                    suma += store[r][a];
-                }
-            });
-            return suma;
-        });
+    function colorScale(value, min, max) {
+      if (max === min) return "#fbc02d";
+      const t = (value - min) / (max - min);
 
-        const tracesMacro = [
-            {
-                x: listaAnios, y: datosRM, name: 'Región Metropolitana',
-                type: 'scatter', mode: 'lines+markers',
-                line: { width: 4, color: '#c0392b' }, marker: { size: 8 }
-            },
-            {
-                x: listaAnios, y: datosResto, name: 'Resto de Chile (15 regiones)',
-                type: 'scatter', mode: 'lines+markers',
-                line: { width: 4, color: '#2980b9' }, marker: { size: 8 }
-            }
-        ];
+      const stops = [
+        { t: 0.00, c: [232, 245, 233] },
+        { t: 0.20, c: [165, 214, 167] },
+        { t: 0.40, c: [102, 187, 106] },
+        { t: 0.60, c: [251, 192, 45] },
+        { t: 0.80, c: [239, 108, 0] },
+        { t: 1.00, c: [198, 40, 40] }
+      ];
 
-        Plotly.newPlot('chart-macro', tracesMacro, {
-            margin: { l: 80, r: 40, t: 10, b: 40 },
-            xaxis: { showgrid: false },
-            yaxis: { title: 'Matrícula Total', gridcolor: '#f0f0f0' },
-            hovermode: 'x unified',
-            legend: { orientation: 'h', y: -0.2, x: 0.5, xanchor: 'center' }
-        }, { responsive: true });
+      let a = stops[0], b = stops[stops.length - 1];
+      for (let i = 0; i < stops.length - 1; i++) {
+        if (t >= stops[i].t && t <= stops[i + 1].t) {
+          a = stops[i];
+          b = stops[i + 1];
+          break;
+        }
+      }
 
+      const localT = (t - a.t) / (b.t - a.t || 1);
+      const rgb = a.c.map((v, i) => Math.round(v + (b.c[i] - v) * localT));
+      return `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
+    }
 
-        const regionesMicro = listaRegiones.filter(r => !r.toUpperCase().includes("METROPOLITANA"));
-        
-        const tracesMicro = regionesMicro.map(region => ({
-            x: listaAnios,
-            y: listaAnios.map(a => store[region][a] || null),
-            name: region,
-            type: 'scatter', mode: 'lines',
-            line: { width: 2, shape: 'spline' },
-            hovertemplate: `<b>${region}</b><br>%{y:,.0f} alumnos<extra></extra>`
+    function drawLineChart(svgId, serie) {
+      const svg = document.getElementById(svgId);
+      svg.innerHTML = "";
+
+      const W = 760, H = 430;
+      const m = { top: 26, right: 34, bottom: 52, left: 66 };
+      const iw = W - m.left - m.right;
+      const ih = H - m.top - m.bottom;
+
+      const xs = serie.map(d => d.x);
+      const ys = serie.map(d => d.y);
+
+      const xMin = Math.min(...xs);
+      const xMax = Math.max(...xs);
+      const yMin = Math.floor(Math.min(...ys) - 1);
+      const yMax = Math.ceil(Math.max(...ys) + 1);
+
+      const xScale = x => m.left + ((x - xMin) / (xMax - xMin || 1)) * iw;
+      const yScale = y => m.top + ih - ((y - yMin) / (yMax - yMin || 1)) * ih;
+
+      for (let i = 0; i <= 5; i++) {
+        const value = yMin + ((yMax - yMin) * i / 5);
+        const y = yScale(value);
+
+        svg.appendChild(svgEl("line", {
+          x1: m.left, y1: y, x2: m.left + iw, y2: y,
+          stroke: "#dfe6ee", "stroke-width": 1
         }));
 
-        Plotly.newPlot('chart-micro', tracesMicro, {
-            margin: { l: 80, r: 40, t: 10, b: 40 },
-            xaxis: { showgrid: false },
-            yaxis: { title: 'Matrícula Regional', gridcolor: '#f0f0f0' },
-            hovermode: 'closest',
-            showlegend: false,
-            plot_bgcolor: 'white'
-        }, { responsive: true });
+        svg.appendChild(svgEl("text", {
+          x: m.left - 10, y: y + 4,
+          "text-anchor": "end",
+          "font-size": 12, fill: "#667085"
+        }, `${value.toFixed(0)}%`));
+      }
 
-    } catch (e) {
-        console.error(e);
-        document.body.innerHTML = `<h2 style="color:red; text-align:center;">Error: ${e.message}</h2>`;
+      xs.forEach(x => {
+        const xx = xScale(x);
+        svg.appendChild(svgEl("text", {
+          x: xx, y: H - 16,
+          "text-anchor": "middle",
+          "font-size": 12, fill: "#667085"
+        }, x));
+      });
+
+      svg.appendChild(svgEl("line", {
+        x1: m.left, y1: m.top + ih, x2: m.left + iw, y2: m.top + ih,
+        stroke: "#9aa6b2", "stroke-width": 1.2
+      }));
+
+      svg.appendChild(svgEl("line", {
+        x1: m.left, y1: m.top, x2: m.left, y2: m.top + ih,
+        stroke: "#9aa6b2", "stroke-width": 1.2
+      }));
+
+      const area = [
+        { x: xScale(xs[0]), y: yScale(yMin) },
+        ...serie.map(d => ({ x: xScale(d.x), y: yScale(d.y) })),
+        { x: xScale(xs[xs.length - 1]), y: yScale(yMin) }
+      ];
+
+      svg.appendChild(svgEl("path", {
+        d: linePath(area) + " Z",
+        fill: "#f3dede",
+        opacity: 0.9
+      }));
+
+      const pts = serie.map(d => ({ x: xScale(d.x), y: yScale(d.y) }));
+
+      svg.appendChild(svgEl("path", {
+        d: linePath(pts),
+        fill: "none",
+        stroke: "#9f2d2d",
+        "stroke-width": 4,
+        "stroke-linecap": "round",
+        "stroke-linejoin": "round"
+      }));
+
+      pts.forEach((p, i) => {
+        svg.appendChild(svgEl("circle", {
+          cx: p.x, cy: p.y, r: 4.5,
+          fill: "#9f2d2d", stroke: "#ffffff", "stroke-width": 2
+        }));
+
+        if (i === pts.length - 1) {
+          svg.appendChild(svgEl("text", {
+            x: p.x + 9, y: p.y + 5,
+            "font-size": 13, "font-weight": 700, fill: "#9f2d2d"
+          }, formatPct(serie[i].y)));
+        }
+      });
+
+      svg.appendChild(svgEl("text", {
+        x: 20,
+        y: m.top + ih / 2,
+        transform: `rotate(-90 20 ${m.top + ih / 2})`,
+        "text-anchor": "middle",
+        "font-size": 12,
+        fill: "#667085"
+      }, "% del total nacional"));
     }
-}
-window.onload = iniciar;
-</script>
-</body>
-<p class="desc">Datos rescatados del Centro de Estudios Mineduc</p>
 
+    function drawCompareChart(svgId, series) {
+      const svg = document.getElementById(svgId);
+      svg.innerHTML = "";
+
+      const W = 760, H = 430;
+      const m = { top: 26, right: 110, bottom: 52, left: 72 };
+      const iw = W - m.left - m.right;
+      const ih = H - m.top - m.bottom;
+
+      const xs = [...new Set(series.flatMap(s => s.data.map(d => d.x)))].sort((a, b) => a - b);
+      const ys = series.flatMap(s => s.data.map(d => d.y));
+
+      const xMin = Math.min(...xs);
+      const xMax = Math.max(...xs);
+      const yMin = 0;
+      const yMax = Math.ceil(Math.max(...ys) / 10000) * 10000;
+
+      const xScale = x => m.left + ((x - xMin) / (xMax - xMin || 1)) * iw;
+      const yScale = y => m.top + ih - ((y - yMin) / (yMax - yMin || 1)) * ih;
+
+      for (let i = 0; i <= 5; i++) {
+        const value = yMin + ((yMax - yMin) * i / 5);
+        const y = yScale(value);
+
+        svg.appendChild(svgEl("line", {
+          x1: m.left, y1: y, x2: m.left + iw, y2: y,
+          stroke: "#dfe6ee", "stroke-width": 1
+        }));
+
+        svg.appendChild(svgEl("text", {
+          x: m.left - 10, y: y + 4,
+          "text-anchor": "end",
+          "font-size": 12,
+          fill: "#667085"
+        }, formatMiles(Math.round(value))));
+      }
+
+      xs.forEach(x => {
+        const xx = xScale(x);
+        svg.appendChild(svgEl("text", {
+          x: xx, y: H - 16,
+          "text-anchor": "middle",
+          "font-size": 12,
+          fill: "#667085"
+        }, x));
+      });
+
+      svg.appendChild(svgEl("line", {
+        x1: m.left, y1: m.top + ih, x2: m.left + iw, y2: m.top + ih,
+        stroke: "#9aa6b2", "stroke-width": 1.2
+      }));
+
+      svg.appendChild(svgEl("line", {
+        x1: m.left, y1: m.top, x2: m.left, y2: m.top + ih,
+        stroke: "#9aa6b2", "stroke-width": 1.2
+      }));
+
+      series.forEach(s => {
+        const pts = s.data.map(d => ({ x: xScale(d.x), y: yScale(d.y) }));
+
+        svg.appendChild(svgEl("path", {
+          d: linePath(pts),
+          fill: "none",
+          stroke: s.color,
+          "stroke-width": s.width,
+          "stroke-linecap": "round",
+          "stroke-linejoin": "round"
+        }));
+
+        pts.forEach((p, i) => {
+          svg.appendChild(svgEl("circle", {
+            cx: p.x, cy: p.y, r: s.point,
+            fill: s.color, stroke: "#ffffff", "stroke-width": 1.4
+          }));
+
+          if (i === pts.length - 1) {
+            svg.appendChild(svgEl("text", {
+              x: p.x + 8, y: p.y + 4,
+              "font-size": 12, "font-weight": 700, fill: s.color
+            }, s.name));
+          }
+        });
+      });
+
+      svg.appendChild(svgEl("text", {
+        x: 20,
+        y: m.top + ih / 2,
+        transform: `rotate(-90 20 ${m.top + ih / 2})`,
+        "text-anchor": "middle",
+        "font-size": 12,
+        fill: "#667085"
+      }, "Matrícula total"));
+    }
+
+    function drawMap(svgId, geo, valuesMap) {
+      const svg = document.getElementById(svgId);
+      svg.innerHTML = "";
+
+      const width = 900;
+      const height = 900;
+      const pad = 40;
+
+      const entries = geo.features.map(f => {
+        const rawName = f.properties.Region;
+        const key = normalizar(rawName);
+        const value = valuesMap[key] ?? 0;
+        return {
+          name: nombreBonito(rawName),
+          geometry: f.geometry,
+          value
+        };
+      });
+
+      const allPts = geo.features.flatMap(f => flattenCoords(f.geometry));
+      const bounds = {
+        minLon: Math.min(...allPts.map(p => p[0])),
+        maxLon: Math.max(...allPts.map(p => p[0])),
+        minLat: Math.min(...allPts.map(p => p[1])),
+        maxLat: Math.max(...allPts.map(p => p[1]))
+      };
+
+      const nonZero = entries.filter(d => d.value > 0);
+      const min = Math.min(...nonZero.map(d => d.value));
+      const max = Math.max(...nonZero.map(d => d.value));
+      const mid = Math.round((min + max) / 2);
+
+      document.getElementById("legendMin").textContent = formatMiles(min);
+      document.getElementById("legendMid").textContent = formatMiles(mid);
+      document.getElementById("legendMax").textContent = formatMiles(max);
+
+      svg.appendChild(svgEl("rect", {
+        x: 0, y: 0, width, height,
+        fill: "#fbfdff",
+        rx: 18
+      }));
+
+      entries.forEach(region => {
+        const pathData = geometryToPath(region.geometry, bounds, width, height, pad);
+        const fill = region.value > 0 ? colorScale(region.value, min, max) : "#f2f4f7";
+
+        svg.appendChild(svgEl("path", {
+          d: pathData,
+          fill,
+          stroke: "#ffffff",
+          "stroke-width": 1,
+          "vector-effect": "non-scaling-stroke"
+        }));
+      });
+    }
+
+    async function iniciar() {
+      try {
+        const [geo, csv] = await Promise.all([
+          cargarJSON("./regiones.json"),
+          cargarCSV("./resumen_superior.csv")
+        ]);
+
+        const data = csv.map(d => ({
+          AGNO: Number(d.AGNO),
+          NOM_REGION: d.NOM_REGION,
+          TOTAL_MATRICULA: Number(d.TOTAL_MATRICULA)
+        }));
+
+        const anios = [...new Set(data.map(d => d.AGNO))].sort((a, b) => a - b);
+        if (!anios.length) throw new Error("No hay datos para graficar.");
+
+        const totalPorAnio = {};
+        const porRegion = {};
+
+        data.forEach(d => {
+          if (!totalPorAnio[d.AGNO]) totalPorAnio[d.AGNO] = 0;
+          totalPorAnio[d.AGNO] += d.TOTAL_MATRICULA;
+
+          if (!porRegion[d.NOM_REGION]) porRegion[d.NOM_REGION] = {};
+          porRegion[d.NOM_REGION][d.AGNO] = d.TOTAL_MATRICULA;
+        });
+
+        const regionRM = Object.keys(porRegion).find(r => r.toUpperCase().includes("METROPOLITANA"));
+        if (!regionRM) throw new Error("No se encontró la Región Metropolitana.");
+
+        const serieRM = anios.map(a => {
+          const valorRM = porRegion[regionRM][a] || 0;
+          const total = totalPorAnio[a] || 0;
+          return {
+            x: a,
+            y: total > 0 ? (valorRM / total) * 100 : 0
+          };
+        });
+
+        drawLineChart("lineChart", serieRM);
+
+        const inicio = serieRM[0].y;
+        const fin = serieRM[serieRM.length - 1].y;
+
+        document.getElementById("statStart").textContent = formatPct(inicio);
+        document.getElementById("statEnd").textContent = formatPct(fin);
+        document.getElementById("lineNote").innerHTML =
+          `La Región Metropolitana pasa de representar aproximadamente <b>${formatPct(inicio)}</b> del total nacional en el primer año a <b>${formatPct(fin)}</b> en el último.`;
+
+        const ultimoAnio = anios[anios.length - 1];
+
+        const top5Regions = Object.keys(porRegion)
+          .map(region => ({
+            region,
+            ultimo: porRegion[region][ultimoAnio] || 0
+          }))
+          .sort((a, b) => b.ultimo - a.ultimo)
+          .slice(0, 5);
+
+        const palette = ["#9f2d2d", "#2f6ea5", "#2e8b57", "#9467bd", "#d97706"];
+
+        const top5Series = top5Regions.map((d, i) => ({
+          name: d.region,
+          color: palette[i],
+          width: d.region.toUpperCase().includes("METROPOLITANA") ? 4 : 2.5,
+          point: d.region.toUpperCase().includes("METROPOLITANA") ? 4.1 : 3.1,
+          data: anios.map(a => ({
+            x: a,
+            y: porRegion[d.region][a] || 0
+          }))
+        }));
+
+        drawCompareChart("compareChart", top5Series);
+
+        const rankingList = document.getElementById("rankingList");
+        rankingList.innerHTML = "";
+        top5Regions.forEach(d => {
+          const li = document.createElement("li");
+          li.innerHTML = `
+            <span class="region-name">${d.region}</span>
+            <span class="region-value">${formatMiles(d.ultimo)}</span>
+          `;
+          rankingList.appendChild(li);
+        });
+
+        const data2025 = data.filter(d => d.AGNO === 2025);
+        if (!data2025.length) throw new Error("No encontré registros para 2025 en resumen_superior.csv");
+
+        const valuesMap = {};
+        data2025.forEach(d => {
+          valuesMap[normalizar(d.NOM_REGION)] = d.TOTAL_MATRICULA;
+        });
+
+        drawMap("mapSvg", geo, valuesMap);
+
+      } catch (e) {
+        console.error(e);
+        document.getElementById("errorMsg").textContent = "Error: " + e.message;
+      }
+    }
+
+    window.onload = iniciar;
+  </script>
+</body>
 </html>
