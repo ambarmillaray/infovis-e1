@@ -1,0 +1,177 @@
+AGNO,NOM_REGION,TOTAL_MATRICULA
+2015,Antofagasta,42313
+2015,Arica,16012
+2015,Atacama,10521
+2015,Aysén,2215
+2015,Biobío,137240
+2015,Coquimbo,42727
+2015,La Araucanía,57775
+2015,Lib. Gral. B. O'Higgins,28893
+2015,Los Lagos,41982
+2015,Los Ríos,22620
+2015,Magallanes,7910
+2015,Maule,52978
+2015,Metropolitana,590537
+2015,Tarapacá,18120
+2015,Valparaíso,136046
+2015,Ñuble,25154
+2016,Antofagasta,40548
+2016,Arica,16216
+2016,Atacama,12128
+2016,Aysén,2471
+2016,Biobío,135760
+2016,Coquimbo,43601
+2016,La Araucanía,60320
+2016,Lib. Gral. B. O'Higgins,28829
+2016,Los Lagos,42889
+2016,Los Ríos,23379
+2016,Magallanes,8047
+2016,Maule,55349
+2016,Metropolitana,598045
+2016,Tarapacá,17806
+2016,Valparaíso,136793
+2016,Ñuble,24997
+2017,Antofagasta,40792
+2017,Arica,16450
+2017,Atacama,12554
+2017,Aysén,2620
+2017,Biobío,134774
+2017,Coquimbo,43899
+2017,La Araucanía,61262
+2017,Lib. Gral. B. O'Higgins,28957
+2017,Los Lagos,43156
+2017,Los Ríos,24341
+2017,Magallanes,8002
+2017,Maule,55627
+2017,Metropolitana,598212
+2017,Tarapacá,17623
+2017,Valparaíso,135137
+2017,Ñuble,24887
+2018,Antofagasta,41214
+2018,Arica,17269
+2018,Atacama,12745
+2018,Aysén,2762
+2018,Biobío,132690
+2018,Coquimbo,44821
+2018,La Araucanía,60915
+2018,Lib. Gral. B. O'Higgins,28827
+2018,Los Lagos,43752
+2018,Los Ríos,26097
+2018,Magallanes,8000
+2018,Maule,57257
+2018,Metropolitana,607100
+2018,Tarapacá,19069
+2018,Valparaíso,135286
+2018,Ñuble,24530
+2019,Antofagasta,41038
+2019,Arica,17376
+2019,Atacama,13084
+2019,Aysén,2852
+2019,Biobío,131574
+2019,Coquimbo,45051
+2019,La Araucanía,60745
+2019,Lib. Gral. B. O'Higgins,28444
+2019,Los Lagos,43520
+2019,Los Ríos,26718
+2019,Magallanes,7789
+2019,Maule,58716
+2019,Metropolitana,613360
+2019,Tarapacá,19734
+2019,Valparaíso,134749
+2019,Ñuble,23733
+2020,Antofagasta,39047
+2020,Arica,16788
+2020,Atacama,12089
+2020,Aysén,2888
+2020,Biobío,127743
+2020,Coquimbo,42658
+2020,La Araucanía,58684
+2020,Lib. Gral. B. O'Higgins,27268
+2020,Los Lagos,42124
+2020,Los Ríos,26711
+2020,Magallanes,7034
+2020,Maule,58223
+2020,Metropolitana,587891
+2020,Tarapacá,18726
+2020,Valparaíso,130117
+2020,Ñuble,22907
+2021,Antofagasta,39637
+2021,Arica,17558
+2021,Atacama,13278
+2021,Aysén,2870
+2021,Biobío,130787
+2021,Coquimbo,45565
+2021,La Araucanía,61761
+2021,Lib. Gral. B. O'Higgins,27088
+2021,Los Lagos,42101
+2021,Los Ríos,27571
+2021,Magallanes,7186
+2021,Maule,59609
+2021,Metropolitana,643447
+2021,Tarapacá,19274
+2021,Valparaíso,133976
+2021,Ñuble,22993
+2022,Antofagasta,38341
+2022,Arica,16910
+2022,Atacama,12613
+2022,Aysén,2565
+2022,Biobío,130060
+2022,Coquimbo,45218
+2022,La Araucanía,60920
+2022,Lib. Gral. B. O'Higgins,27308
+2022,Los Lagos,42363
+2022,Los Ríos,27969
+2022,Magallanes,6810
+2022,Maule,58255
+2022,Metropolitana,662600
+2022,Tarapacá,18460
+2022,Valparaíso,131302
+2022,Ñuble,22453
+2023,Antofagasta,37660
+2023,Arica,17157
+2023,Atacama,12540
+2023,Aysén,2476
+2023,Biobío,131173
+2023,Coquimbo,45656
+2023,La Araucanía,61262
+2023,Lib. Gral. B. O'Higgins,28640
+2023,Los Lagos,43658
+2023,Los Ríos,28868
+2023,Magallanes,7156
+2023,Maule,59312
+2023,Metropolitana,692637
+2023,Tarapacá,18806
+2023,Valparaíso,131482
+2023,Ñuble,22963
+2024,Antofagasta,37191
+2024,Arica,17399
+2024,Atacama,12651
+2024,Aysén,2309
+2024,Biobío,132477
+2024,Coquimbo,46637
+2024,La Araucanía,62491
+2024,Lib. Gral. B. O'Higgins,29641
+2024,Los Lagos,44272
+2024,Los Ríos,28879
+2024,Magallanes,7434
+2024,Maule,61037
+2024,Metropolitana,728425
+2024,Tarapacá,19014
+2024,Valparaíso,132613
+2024,Ñuble,23615
+2025,Antofagasta,38121
+2025,Arica,17553
+2025,Atacama,12907
+2025,Aysén,2799
+2025,Biobío,133027
+2025,Coquimbo,47506
+2025,La Araucanía,71510
+2025,Lib. Gral. B. O'Higgins,31268
+2025,Los Lagos,46071
+2025,Los Ríos,29317
+2025,Magallanes,7808
+2025,Maule,63245
+2025,Metropolitana,774967
+2025,Tarapacá,20264
+2025,Valparaíso,135642
+2025,Ñuble,23607
