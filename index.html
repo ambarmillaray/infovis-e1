@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Mapa Escolar Nacional</title>
+    <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; }
+        .wrapper { max-width: 900px; margin: 0 auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        #mapa { width: 100%; height: 750px; }
+        h2 { text-align: center; color: #2c3e50; margin-bottom: 5px; }
+        p.subtitle { text-align: center; color: #7f8c8d; margin-bottom: 20px; }
+        .nota-al-pie { text-align: center; font-size: 13px; color: #95a5a6; margin-top: 15px; font-style: italic; }
+    </style>
+</head>
+<body>
+
+<div class="wrapper">
+    <h2>Rendimiento Académico por Región (2015-2025)</h2>
+    <p class="subtitle">Evolución del promedio general a nivel nacional.</p>
+    
+    <div id="mapa"></div>
+    
+    <p class="nota-al-pie">La Región de Ñuble fue creada oficialmente en septiembre de 2018. Los datos de la zona para el periodo 2015-2017 se encuentran consolidados dentro del promedio de la Región del Biobío.</p>
+</div>
+
+<script>
+function obtenerCodigo(texto) {
+    if (!texto) return "R0";
+    let n = String(texto).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
+    
+    if (n.includes("TARAPACA")) return "R1";
+    if (n.includes("ANTOFAGASTA")) return "R2";
+    if (n.includes("ATACAMA")) return "R3";
+    if (n.includes("COQUIMBO")) return "R4";
+    if (n.includes("VALPARAISO")) return "R5";
+    if (n.includes("HIGGINS")) return "R6";
+    if (n.includes("MAULE")) return "R7";
+    if (n.includes("BIOBIO") || n.includes("BIO BIO") || n.includes("BIO-BIO") || n.includes("VIII")) return "R8"; 
+    if (n.includes("ARAUCANIA")) return "R9";
+    if (n.includes("LAGOS")) return "R10";
+    if (n.includes("AYSEN")) return "R11";
+    if (n.includes("MAGALLANES")) return "R12";
+    if (n.includes("METROPOLITANA") || n.includes("SANTIAGO")) return "R13";
+    if (n.includes("RIOS")) return "R14";
+    if (n.includes("ARICA")) return "R15";
+    if (n.includes("NUBLE")) return "R16";
+    return "R0";
+}
+
+async function iniciar() {
+    try {
+        // 1. Cargar JSON local
+        const resGeo = await fetch('regiones.json');
+        const geoData = await resGeo.json();
+
+        geoData.features.forEach(f => {
+            let codigoEncontrado = "R0";
+            for (let key in f.properties) {
+                let cod = obtenerCodigo(f.properties[key]);
+                if (cod !== "R0") { codigoEncontrado = cod; break; }
+            }
+            f.properties.ID_UNICO = codigoEncontrado;
+        });
+
+        // 2. Cargar CSV
+        const resCsv = await fetch('resumen_nacional.csv');
+        const filas = (await resCsv.text()).trim().split('\n').slice(1);
+
+        const anios = ["2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022", "2023", "2024", "2025"];
+        const store = {};
+        let notas = [];
+
+        filas.forEach(l => {
+            const cols = l.split(',');
+            if (cols.length >= 3) {
+                const agno = cols[0].trim();
+                const cod = obtenerCodigo(cols[1].trim());
+                const nota = parseFloat(cols[2].trim());
+                
+                if (cod !== "R0" && !isNaN(nota)) {
+                    if (!store[agno]) store[agno] = { locs: [], z: [], txt: [] };
+                    store[agno].locs.push(cod);
+                    store[agno].z.push(nota);
+                    store[agno].txt.push(cols[1].trim());
+                    notas.push(nota);
+                }
+            }
+        });
+
+        // 3. Crear Mapa
+        const data = [{
+            type: 'choropleth',
+            geojson: geoData,
+            locations: store["2015"].locs,
+            z: store["2015"].z,
+            text: store["2015"].txt,
+            featureidkey: 'properties.ID_UNICO',
+            colorscale: 'Viridis',
+            zmin: Math.min(...notas), zmax: Math.max(...notas),
+            marker: { line: { color: 'white', width: 0.5 } },
+            colorbar: { 
+                title: 'Promedio',
+                nticks: 10,
+                tickformat: '.2f' 
+            },
+            hovertemplate: '<b>%{text}</b><br>Promedio: %{z:.2f}<extra></extra>'
+        }];
+
+        const layout = {
+            geo: { fitbounds: "locations", visible: false },
+            margin: { l: 0, r: 0, t: 10, b: 100 },
+            sliders: [{
+                active: 0, 
+                pad: { t: 20 },
+                currentvalue: { prefix: "Año: ", font: { size: 18, color: '#2c3e50' } },
+                steps: anios.map(a => ({
+                    label: a, method: 'animate',
+                    args: [[a], { mode: 'immediate', transition: { duration: 300 }, frame: { duration: 300 } }]
+                }))
+            }]
+        };
+
+        const frames = anios.map(a => ({
+            name: a,
+            data: [{ locations: store[a] ? store[a].locs : [], z: store[a] ? store[a].z : [], text: store[a] ? store[a].txt : [] }]
+        }));
+
+        Plotly.newPlot('mapa', data, layout).then(() => Plotly.addFrames('mapa', frames));
+
+    } catch (e) {
+        console.error("Error cargando el mapa:", e);
+    }
+}
+iniciar();
+</script>
+</body>
+</html>
