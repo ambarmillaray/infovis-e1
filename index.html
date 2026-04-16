@@ -213,6 +213,27 @@
       font-weight: 700;
     }
 
+    /* ESTILO NUEVO PARA EL HOVER DEL MAPA */
+    .tooltip {
+      position: absolute;
+      background: rgba(31, 41, 55, 0.95);
+      color: white;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      z-index: 1000;
+    }
+
+    .tooltip-title {
+      font-weight: 700;
+      margin-bottom: 4px;
+      font-size: 14px;
+    }
+
     @media (max-width: 980px) {
       .two-col {
         grid-template-columns: 1fr;
@@ -228,7 +249,6 @@
   <div class="wrap">
     <section class="hero">
       <h1>Centralización de la educación superior en Chile</h1>
-      </p>
     </section>
 
     <section class="two-col">
@@ -290,6 +310,8 @@
     </section>
   </div>
 
+  <div id="tooltip" class="tooltip"></div>
+
   <script>
     async function cargarJSON(url) {
       const res = await fetch(url);
@@ -319,22 +341,31 @@
       });
     }
 
-    function normalizar(str) {
-      return String(str || "")
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .toLowerCase()
-        .replace(/^region de /, "")
-        .replace(/^region del /, "")
-        .replace(/^region de la /, "")
-        .replace(/^region metropolitana de santiago/, "metropolitana")
-        .replace(/^metropolitana de santiago$/, "metropolitana")
-        .replace(/^o'higgins$/, "ohiggins")
-        .replace(/'/g, "")
-        .replace(/ñ/g, "n")
-        .replace(/\s+/g, " ")
-        .trim();
-    }
+function normalizar(str) {
+    const s = String(str || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase();
+
+    if (s.includes("arica")) return "arica y parinacota";
+    if (s.includes("tarapaca")) return "tarapaca";
+    if (s.includes("antofagasta")) return "antofagasta";
+    if (s.includes("atacama")) return "atacama";
+    if (s.includes("coquimbo")) return "coquimbo";
+    if (s.includes("valparaiso")) return "valparaiso";
+    if (s.includes("metropolitana") || s.includes("santiago")) return "metropolitana";
+    if (s.includes("higgins")) return "ohiggins";
+    if (s.includes("maule")) return "maule";
+    if (s.includes("nuble")) return "nuble";
+    if (s.includes("biobio") || s.includes("bio bio")) return "biobio";
+    if (s.includes("araucania")) return "araucania";
+    if (s.includes("rios")) return "los rios";
+    if (s.includes("lagos")) return "los lagos";
+    if (s.includes("aysen")) return "aysen";
+    if (s.includes("magallanes") || s.includes("antartica")) return "magallanes";
+
+    return s.trim();
+  }
 
     function formatMiles(n) {
       return Number(n).toLocaleString("es-CL");
@@ -529,7 +560,7 @@
       svg.innerHTML = "";
 
       const W = 760, H = 430;
-      const m = { top: 26, right: 110, bottom: 52, left: 72 };
+      const m = { top: 26, right: 130, bottom: 52, left: 72 };
       const iw = W - m.left - m.right;
       const ih = H - m.top - m.bottom;
 
@@ -581,7 +612,7 @@
         stroke: "#9aa6b2", "stroke-width": 1.2
       }));
 
-      series.forEach(s => {
+      series.forEach((s, sIndex) => {
         const pts = s.data.map(d => ({ x: xScale(d.x), y: yScale(d.y) }));
 
         svg.appendChild(svgEl("path", {
@@ -598,14 +629,20 @@
             cx: p.x, cy: p.y, r: s.point,
             fill: s.color, stroke: "#ffffff", "stroke-width": 1.4
           }));
-
-          if (i === pts.length - 1) {
-            svg.appendChild(svgEl("text", {
-              x: p.x + 8, y: p.y + 4,
-              "font-size": 12, "font-weight": 700, fill: s.color
-            }, s.name));
-          }
         });
+
+        // NUEVO: AGREGAR LEYENDA
+        const legendX = W - m.right + 15;
+        const legendY = m.top + (sIndex * 22);
+
+        svg.appendChild(svgEl("rect", {
+          x: legendX, y: legendY, width: 12, height: 12, fill: s.color, rx: 2
+        }));
+
+        svg.appendChild(svgEl("text", {
+          x: legendX + 18, y: legendY + 10,
+          "font-size": 11, fill: "#1f2937", "font-weight": 600
+        }, s.name.charAt(0).toUpperCase() + s.name.slice(1))); // Capitalizar región
       });
 
       svg.appendChild(svgEl("text", {
@@ -632,13 +669,13 @@
         const value = valuesMap[key] ?? 0;
         return {
           geometry: f.geometry,
-          value
+          value,
+          name: rawName // NUEVO: Guardar el nombre original para el tooltip
         };
       });
 
       const allPts = geo.features.flatMap(f => flattenCoords(f.geometry));
 
-      // Límites reales completos, sin recorte
       const bounds = {
         minLon: Math.min(...allPts.map(p => p[0])),
         maxLon: Math.max(...allPts.map(p => p[0])),
@@ -667,13 +704,39 @@
         const pathData = geometryToPath(region.geometry, bounds, width, height, pad);
         const fill = region.value > 0 ? colorScale(region.value, min, max) : "#f2f4f7";
 
-        svg.appendChild(svgEl("path", {
+        const pathEl = svgEl("path", {
           d: pathData,
           fill,
           stroke: "#ffffff",
           "stroke-width": 1,
           "vector-effect": "non-scaling-stroke"
-        }));
+        });
+
+        // NUEVO: EVENTOS PARA EL HOVER DEL TOOLTIP
+        if (region.value > 0) {
+          pathEl.addEventListener("mouseover", (e) => {
+            const tooltip = document.getElementById("tooltip");
+            tooltip.style.opacity = "1";
+            tooltip.innerHTML = `<div class="tooltip-title">${region.name}</div>${formatMiles(region.value)} matriculados`;
+            pathEl.setAttribute("stroke", "#1f2937");
+            pathEl.setAttribute("stroke-width", "2");
+          });
+          
+          pathEl.addEventListener("mousemove", (e) => {
+            const tooltip = document.getElementById("tooltip");
+            tooltip.style.left = (e.pageX + 15) + "px";
+            tooltip.style.top = (e.pageY + 15) + "px";
+          });
+          
+          pathEl.addEventListener("mouseout", () => {
+            const tooltip = document.getElementById("tooltip");
+            tooltip.style.opacity = "0";
+            pathEl.setAttribute("stroke", "#ffffff");
+            pathEl.setAttribute("stroke-width", "1");
+          });
+        }
+
+        svg.appendChild(pathEl);
       });
     }
 
